@@ -1,6 +1,12 @@
+import { PersonaKey } from "@/app/generated/prisma/enums";
 import { z } from "zod";
 
 export const messageSchema = z.object({
-  content: z.string().trim().max(4000).min(1),
-  persona: z.enum(["HITESH", "PIYUSH"]),
+  content: z
+    .string()
+    .trim()
+    .min(1, "Message cannot be empty")
+    .max(4000, "Message is too long"),
 });
+
+export const personaSchema = z.enum(PersonaKey);

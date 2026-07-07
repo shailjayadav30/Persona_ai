@@ -1,12 +1,33 @@
 import { authOptions } from "@/lib/auth";
+import { askGemini } from "@/lib/llm/gemini";
 import prisma from "@/lib/prisma";
-import { messageSchema } from "@/lib/validations/message";
+import { messageSchema, personaSchema } from "@/lib/validations/message";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    // const { persona, role, content } = await request.json();
+    const session = await getServerSession(authOptions);
+    console.log("session", session);
+    if (!session) {
+      return NextResponse.json(
+        {
+          message: "unauthorized ",
+        },
+        { status: 401 },
+      );
+    }
+    const { searchParams } = new URL(request.url);
+    const persona = searchParams.get("persona");
+    const parsedPersona = personaSchema.safeParse(persona);
+    if (!parsedPersona.success) {
+      return NextResponse.json(
+        {
+          message: "Invalid Persona",
+        },
+        { status: 400 },
+      );
+    }
     const body = await request.json();
     const validatedBody = messageSchema.safeParse(body);
     if (!validatedBody.success) {
@@ -18,30 +39,35 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    const { persona, content } = validatedBody.data;
-    const session = await getServerSession(authOptions);
-    console.log("session", session);
-    if (!session) {
+    const { content } = validatedBody.data;
+    const validPersona = parsedPersona.data;
+    const answer = await askGemini(validPersona, content);
+    if (!answer) {
       return NextResponse.json(
-        {
-          message: "unauthorized ",
-        },
-        { status: 401 },
+        { message: "Gemini did not return an empty  response" },
+        { status: 500 },
       );
     }
-    const message = await prisma.message.create({
+    const clientMessage = await prisma.message.create({
       data: {
-        userId: session.user.id,
-        persona,
+        persona: validPersona,
         content,
         role: "USER",
+        userId: session.user.id,
       },
     });
-    console.log("Message", message);
-    return NextResponse.json({
-      success: true,
-      message,
+    const llmMessage = await prisma.message.create({
+      data: {
+        persona: validPersona,
+        content: answer,
+        role: "ASSISTANT",
+        userId: session.user.id,
+      },
     });
+    console.log("Client Message", clientMessage);
+    console.log("LLM Message", llmMessage);
+
+    return NextResponse.json({ answer });
   } catch (error) {
     console.log("Error", error);
     return NextResponse.json(
