@@ -1,0 +1,67 @@
+Everyone welcome back! Aur welcome to ek aur exciting tutorial series: Node.js.
+
+Is tutorial series mein hum Node.js ko complete cover karne wale hain—Node.js kya hota hai, web server kaise create karte hain, MongoDB ke saath REST APIs kaise banate hain, aur bahut kuch.
+
+To is video mein sabse pehle hum samjhenge ki Node.js actually hai kya. Kya Node.js koi framework hai? Koi library hai? Ya kuch aur? Ye sab hum aaj clear karenge.
+
+To chaliye start karte hain.
+
+Sabse pehla sawaal aata hai: **Node.js hai kya?**
+
+Hum sab JavaScript use kar chuke hain. JavaScript ek browser language hai. Jab bhi tum JavaScript code likhte ho, wo browser ke andar execute hota hai.
+
+Lekin browser ke bahar JavaScript run kyun nahi hoti?
+
+Reason ye hai ki har browser ke andar ek **JavaScript Engine** hota hai. Jab tum browser install karte ho, uske saath JavaScript engine bhi install hota hai.
+
+Example:
+- Chrome → V8 Engine
+- Firefox → SpiderMonkey
+- Safari → JavaScriptCore
+
+Inmein se sabse popular engine **V8** hai, jo Chrome aur Chromium browsers use karte hain.
+
+Ab interesting part aata hai.
+
+Developers ne V8 engine ko browser se alag karke C++ ke saath embed kar diya. Is wajah se JavaScript ko browser ke bahar bhi execute karna possible ho gaya.
+
+Yahi hai **Node.js**.
+
+Node.js ki wajah se JavaScript machine-level capabilities use kar sakti hai, jaise:
+- File handling
+- Network requests
+- Web servers banana
+- Operating system ke saath interact karna
+
+Isliye Node.js ki help se hum backend applications aur web servers bana sakte hain.
+
+Ek important baat yaad rakhna:
+
+**Node.js na koi framework hai aur na hi koi library.**
+Node.js ek **JavaScript Runtime Environment** hai.
+
+Browser mein:
+```js
+console.log("Hello")
+```
+
+ye V8 engine ki help se run hota hai.
+
+Waise hi terminal mein agar tum `node` command run karte ho aur likhte ho:
+
+```js
+console.log("Hello from Node")
+```
+
+to ye browser ke bahar execute ho jata hai.
+
+Isi wajah se hum JavaScript ko backend development ke liye use kar paate hain.
+
+Official website:
+https://nodejs.org
+
+Agar tum JavaScript pehle se jaante ho, to Node.js seekhna kaafi easy hoga, kyunki syntax wahi rehta hai. Bas environment change hota hai.
+
+Next video mein hum Node.js install karenge aur apni machine par setup karenge.
+
+Until then, bye!
