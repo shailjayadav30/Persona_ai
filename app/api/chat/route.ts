@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { askGemini } from "@/lib/llm/gemini";
+import { ModerationBlockedError } from "@/lib/llm/moderation";
 import prisma from "@/lib/prisma";
 import { messageSchema, personaSchema } from "@/lib/validations/message";
 import { getServerSession } from "next-auth";
@@ -69,6 +70,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ answer });
   } catch (error) {
+    if (error instanceof ModerationBlockedError) {
+      console.log("Moderation blocked", error.stage, error.reason);
+      return NextResponse.json(
+        {
+          message:
+            "This message can't be answered because it was flagged by content safety filters. Please rephrase your question.",
+        },
+        { status: 400 },
+      );
+    }
     console.log("Error", error);
     return NextResponse.json(
       {
