@@ -1,15 +1,18 @@
 import { authOptions } from "@/lib/auth";
 import { askGemini } from "@/lib/llm/gemini";
-import { ModerationBlockedError } from "@/lib/llm/moderation";
+import {
+  detectPromptInjection,
+  ModerationBlockedError,
+} from "@/lib/llm/moderation";
 import prisma from "@/lib/prisma";
 import { messageSchema, personaSchema } from "@/lib/validations/message";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { ratelimiter } from "@/lib/ratelimit";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    console.log("session", session);
     if (!session) {
       return NextResponse.json(
         {
@@ -18,6 +21,23 @@ export async function POST(request: NextRequest) {
         { status: 401 },
       );
     }
+    const { success, limit, reset, remaining } = await ratelimiter.limit(
+      session.user.id,
+    );
+    if (!success) {
+      return NextResponse.json(
+        { message: "Too many requests!" },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const persona = searchParams.get("persona");
     const parsedPersona = personaSchema.safeParse(persona);
@@ -42,14 +62,38 @@ export async function POST(request: NextRequest) {
     }
     const { content } = validatedBody.data;
     const validPersona = parsedPersona.data;
+    const reason = detectPromptInjection(content);
+    if(reason){
+        throw new ModerationBlockedError("input", reason);
+    }
     const answer = await askGemini(validPersona, content);
+    const leakReason=345
     if (!answer) {
       return NextResponse.json(
         { message: "Gemini did not return an empty  response" },
         { status: 500 },
       );
     }
-    const clientMessage = await prisma.message.create({
+    // await prisma.$transaction([
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content,
+    //       role: "USER",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content: answer,
+    //       role: "ASSISTANT",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    // ]);
+
+    await prisma.message.create({
       data: {
         persona: validPersona,
         content,
@@ -57,7 +101,8 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
       },
     });
-    const llmMessage = await prisma.message.create({
+
+    await prisma.message.create({
       data: {
         persona: validPersona,
         content: answer,
@@ -65,9 +110,6 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
       },
     });
-    console.log("Client Message", clientMessage);
-    console.log("LLM Message", llmMessage);
-
     return NextResponse.json({ answer });
   } catch (error) {
     if (error instanceof ModerationBlockedError) {
