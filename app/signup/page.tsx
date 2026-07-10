@@ -1,11 +1,12 @@
-import React from 'react'
+
+import SignUp from "../components/SignupForm";
 
 const page = () => {
   return (
-    <div>
-      signup page
+    <div className="flex items-center justify-center h-screen bg-surface">
+      <SignUp />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default page;

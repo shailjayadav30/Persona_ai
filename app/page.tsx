@@ -1,48 +1,40 @@
 "use client";
-const URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-import axios from "axios";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
-
+import PersonaCard from "./components/PersonaCard";
+import hitesh from "../public/hitesh.png";
+import piyush from "../public/piyush.png";
+import Chat from "./components/Chat";
+import { useState } from "react";
+export  type PersonaId = "HITESH" | "PIYUSH";
 export default function Home() {
-  const [reply, setReply] = useState("");
-  const [ques, setQues] = useState("");
-  const router = useRouter();
-  function selectPersona(persona: "HITESH" | "PIYUSH") {
-    router.push(`/?persona=${persona}`);
-  }
-  // const searchParams = useSearchParams();
-  // const persona = searchParams.get("persona");
-  // console.log("Persona", persona);
-  // const sendMessage = async () => {
-  //   const response = await axios.post(`${URL}/api/chat?persona=${persona}`,{
-  //     content:ques
-  //   });
-  //   console.log("Response", response.data);
-
-  //   setReply(response.data.answer);
-  // };
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(
+    null,
+  );
 
   return (
-    <Suspense fallback={<div>Loading search...</div>}>
-
-    <div className="bg-green-600 p-10">
-      <div>{reply}</div>
-      <input
-        type="text"
-        name=""
-        id=""
-        value={ques}
-        onChange={(e) => setQues(e.target.value)}
+    <div className=" flex flex-col items-center gap-2">
+      <h1 className="mt-10 text-3xl font-semibold">Select your AI Mentor</h1>
+      <h1 className="text-sm pb-4">Choose a person tailored to your current task</h1>
+     <div className="flex gap-2">
+       <PersonaCard
+        name="HITESH"
+        id="HITESH"
+        image={hitesh}
+        onClick={setSelectedPersona}
+        desc="Coding educator, YouTuber, builder"
       />
-     <div className="gap-4">
-       <button onClick={() => selectPersona("HITESH")}>HITESH</button>
-      <button style={{backgroundColor:"red",padding:10}} onClick={() => selectPersona("PIYUSH")}>PIYUSH</button>
-      {/* <button onClick={() => sendMessage()}>Send</button> */}
-     </div>
+      <PersonaCard
+        name="PIYUSH"
+        id="PIYUSH"
+        image={piyush}
+        onClick={setSelectedPersona}
+        desc="Software Engineer, Content Creator, Educator"
+      />
+     </div> 
+      <Chat personaId={selectedPersona}/>
     </div>
-    </Suspense>
-
   );
 }
+
+
+      {/* {selectedPersona && <Chat personaId={selectedPersona} />} */}

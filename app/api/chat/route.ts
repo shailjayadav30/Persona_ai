@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
         throw new ModerationBlockedError("input", reason);
     }
     const answer = await askGemini(validPersona, content);
-    const leakReason=345
     if (!answer) {
       return NextResponse.json(
         { message: "Gemini did not return an empty  response" },

@@ -11,12 +11,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message: "All fields are required",
-        },
+        },  
         { status: 404 },
       );
     }
     const hashedPass = await bcrypt.hash(password, 10);
-   await prisma.user.create({
+    await prisma.user.create({
       data: {
         email,
         password: hashedPass,
