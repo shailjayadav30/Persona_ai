@@ -66,32 +66,29 @@ export async function POST(request: NextRequest) {
     if(reason){
         throw new ModerationBlockedError("input", reason);
     }
-    const answer = await askGemini(validPersona, content);
-    if (!answer) {
-      return NextResponse.json(
-        { message: "Gemini did not return an empty  response" },
-        { status: 500 },
-      );
-    }
-    // await prisma.$transaction([
-    //   prisma.message.create({
-    //     data: {
-    //       persona: validPersona,
-    //       content,
-    //       role: "USER",
-    //       userId: session.user.id,
-    //     },
-    //   }),
-    //   prisma.message.create({
-    //     data: {
-    //       persona: validPersona,
-    //       content: answer,
-    //       role: "ASSISTANT",
-    //       userId: session.user.id,
-    //     },
-    //   }),
-    // ]);
+    let fullAns=""
+    
+    const stream = await askGemini(validPersona, content);
+    const encoder = new TextEncoder();
+    const readable=new ReadableStream({
+      async start(controller){
 
+        for await(const chunk of stream){
+              const text = chunk.text ?? "";
+              fullAns+=text
+          controller.enqueue(
+            encoder.encode(chunk.text??"")
+          )
+        }
+        controller.close()
+      }
+    })
+//     return new Response(readable, {
+//   headers: {
+//     "Content-Type": "text/plain; charset=utf-8",
+//   },
+// });
+   
     await prisma.message.create({
       data: {
         persona: validPersona,
@@ -104,12 +101,12 @@ export async function POST(request: NextRequest) {
     await prisma.message.create({
       data: {
         persona: validPersona,
-        content: answer,
+        content: fullAns,
         role: "ASSISTANT",
         userId: session.user.id,
       },
     });
-    return NextResponse.json({ answer });
+    return NextResponse.json({ fullAns });
   } catch (error) {
     if (error instanceof ModerationBlockedError) {
       console.log("Moderation blocked", error.stage, error.reason);

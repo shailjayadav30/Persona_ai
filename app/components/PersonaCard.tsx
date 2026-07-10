@@ -6,21 +6,39 @@ interface IPersona {
   name: string;
   image: StaticImageData;
   onClick: (id: PersonaId) => void;
-  desc:string
+  desc: string;
+  selected?: boolean;
 }
-const PersonaCard = ({ id, name, image, onClick,desc }: IPersona) => {
+const PersonaCard = ({ id, name, image, onClick, desc, selected }: IPersona) => {
   return (
-    <div onClick={() => onClick(id)} className="bg-surface-container flex p-4 rounded-xl gap-4   w-88 border border-surface-bright items-center ">
-     <div className="w-10 h-10 rounded-full overflow-hidden">
+    <button
+      type="button"
+      onClick={() => onClick(id)}
+      className={`group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all duration-150 sm:w-80 ${
+        selected
+          ? "border-primary bg-primary-container/10 shadow-[0_0_0_1px_var(--primary)]"
+          : "border-outline-variant bg-surface-container hover:border-outline hover:bg-surface-container-high"
+      }`}
+    >
+      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-outline-variant">
+        <Image
+          src={image}
+          alt={name}
+          width={48}
+          height={48}
+          className="h-full w-full object-cover"
+        />
+      </div>
 
-       <Image src={image} alt={name} width={60} height={60} className="rounded-full object-cover w-full h-full"/>
-     </div>
-  
-     <div>
-       <h1 className="text-sm">{name}</h1>
-      <p className="text-xs">{desc}</p>
-     </div>
-    </div>
+      <div className="min-w-0">
+        <h2 className="text-label-md capitalize text-on-surface">
+          {name.toLowerCase()}
+        </h2>
+        <p className="mt-0.5 truncate text-body-sm text-on-surface-variant">
+          {desc}
+        </p>
+      </div>
+    </button>
   );
 };
 

@@ -1,9 +1,14 @@
 "use client";
 
-import axios from "axios";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PersonaId } from "../page";
-const Chat = ({ personaId }: { personaId: PersonaId | null }) => {
+const Chat = ({
+  personaId,
+  onChangeMentor,
+}: {
+  personaId: PersonaId | null;
+  onChangeMentor?: () => void;
+}) => {
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState<
     {
@@ -11,8 +16,14 @@ const Chat = ({ personaId }: { personaId: PersonaId | null }) => {
       content: string;
     }[]
   >([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [message]);
   async function chatWithPersona() {
+    const prompt=query
+    if(!prompt.trim()) return
     setMessage((prev) => [
       ...prev,
       {
@@ -20,43 +31,112 @@ const Chat = ({ personaId }: { personaId: PersonaId | null }) => {
         content: query,
       },
     ]);
-    setQuery("");
-
-    const chat = await axios.post(`/api/chat?persona=${personaId}`, {
-      content: query,
-    });
-    setMessage((prev) => [
+    setMessage((prev)=>[
       ...prev,
       {
-        role: "assistant",
-        content: chat.data.answer,
+        role:"assistant",
+        content:""
+      }
+    ])
+    setQuery("");
+    const chat = await fetch(`/api/chat?persona=${personaId}`, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
       },
-    ]);
-    console.log("chat response", typeof chat.data.answer);
+      body:JSON.stringify({
+        content:prompt
+      })
+    });
+    const reader=chat.body?.getReader()
+    if(!reader) return
+    const decoder=new TextDecoder()
+    while(true){
+      const {done,value}=await reader.read()
+      if(done) break 
+      const chunk=decoder.decode(value)
+      setMessage((prev) => {
+        const updated=[...prev]
+        updated[updated.length-1]={
+          ...updated[updated.length-1],
+          content:updated[updated.length-1].content+chunk,
+        }
+        return updated;
+    })
+    }
   }
   return (
-    <div className="h-full flex w-9/12 bg-red-300 flex-col">
-      <div className="flex-1 overflow-y-auto pb-24">
-        {message.map((msg, idx) => (
-          <div key={idx} className="mb-4">
-            <strong>{msg.role}</strong>
-            <p>{msg.content}</p>
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <header className="flex items-center justify-between border-b border-outline-variant px-4 py-3 sm:px-6">
+        <div>
+          <p className="text-label-md capitalize text-on-surface">
+            {personaId?.toLowerCase()}
+          </p>
+          <p className="text-body-sm text-on-surface-variant">
+            AI mentor
+          </p>
+        </div>
+        {onChangeMentor && (
+          <button
+            type="button"
+            onClick={onChangeMentor}
+            className="rounded-full border border-outline-variant px-3 py-1.5 text-body-sm text-on-surface-variant transition-colors hover:border-outline hover:text-on-surface"
+          >
+            Change mentor
+          </button>
+        )}
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+        {message.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-body-sm text-on-surface-variant">
+              Ask something to start the conversation
+            </p>
           </div>
-        ))}
+        ) : (
+          <div className="mx-auto flex max-w-3xl flex-col gap-4">
+            {message.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-xl px-4 py-2.5 text-body-md whitespace-pre-wrap ${
+                    msg.role === "user"
+                      ? "bg-primary text-on-primary"
+                      : "bg-surface-container text-on-surface"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 ">
-        <div className="mx-auto max-w-3xl  flex gap-2">
+      <div className="border-t border-outline-variant px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-3xl items-center gap-2">
           <input
             type="text"
             name="chat"
             id="chat"
+            placeholder="Message your mentor..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 border rounded-full px-4   py-2"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && query.trim()) chatWithPersona();
+            }}
+            className="flex-1 rounded-full border border-outline-variant bg-surface-container px-4 py-2.5 text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none"
           />
-          <button className="text-pink-500" onClick={chatWithPersona}>
-            send
+          <button
+            type="button"
+            onClick={chatWithPersona}
+            className="rounded-full bg-primary px-5 py-2.5 text-label-md text-on-primary transition-opacity hover:opacity-90"
+          >
+            Send
           </button>
         </div>
       </div>
@@ -64,4 +144,4 @@ const Chat = ({ personaId }: { personaId: PersonaId | null }) => {
   );
 };
 
-export default Chat;
+export default Chat

@@ -40,11 +40,8 @@ const BLOCKED_FINISH_REASONS: FinishReason[] = [
   FinishReason.SPII,
 ];
 
-export async function askGemini(
-  persona: PersonaKey,
-  prompt: string,
-): Promise<string> {
-  const response = await ai.models.generateContent({
+export async function askGemini(persona: PersonaKey, prompt: string) {
+  return ai.models.generateContentStream({
     model: "gemini-2.5-flash",
     config: {
       systemInstruction: personaPrompts[persona],
@@ -52,21 +49,19 @@ export async function askGemini(
     },
     contents: prompt,
   });
-
-  if (response.promptFeedback?.blockReason) {
-    throw new ModerationBlockedError(
-      "input",
-      response.promptFeedback.blockReason,
-    );
-  }
-
-  const finishReason = response.candidates?.[0]?.finishReason;
-  if (finishReason && BLOCKED_FINISH_REASONS.includes(finishReason)) {
-    throw new ModerationBlockedError("output", finishReason);
-  }
-
-  if (!response.text) {
-    throw new Error("No response from Gemini");
-  }
-  return response.text;
 }
+// if (response.promptFeedback?.blockReason) {
+//   throw new ModerationBlockedError(
+//     "input",
+//     response.promptFeedback.blockReason,
+//   );
+// }
+
+// const finishReason = response.candidates?.[0]?.finishReason;
+// if (finishReason && BLOCKED_FINISH_REASONS.includes(finishReason)) {
+//   throw new ModerationBlockedError("output", finishReason);
+// }
+
+// if (!response.text) {
+//   throw new Error("No response from Gemini");
+// }
