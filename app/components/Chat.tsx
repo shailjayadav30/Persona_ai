@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import hitesh from "../../public/hitesh.png";
+import piyush from "../../public/piyush.png";
 import { PersonaId } from "../page";
+
 const Chat = ({
   personaId,
   onChangeMentor,
@@ -16,14 +20,20 @@ const Chat = ({
       content: string;
     }[]
   >([]);
+  const personaImages = {
+    HITESH: hitesh,
+    PIYUSH: piyush,
+  };
+  const image = personaId ? personaImages[personaId] : null;
+  const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
   async function chatWithPersona() {
-    const prompt=query
-    if(!prompt.trim()) return
+    const prompt = query;
+    if (!prompt.trim()) return;
     setMessage((prev) => [
       ...prev,
       {
@@ -31,50 +41,62 @@ const Chat = ({
         content: query,
       },
     ]);
-    setMessage((prev)=>[
+    setMessage((prev) => [
       ...prev,
       {
-        role:"assistant",
-        content:""
-      }
-    ])
-    setQuery("");
-    const chat = await fetch(`/api/chat?persona=${personaId}`, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
+        role: "assistant",
+        content: "",
       },
-      body:JSON.stringify({
-        content:prompt
-      })
-    });
-    const reader=chat.body?.getReader()
-    if(!reader) return
-    const decoder=new TextDecoder()
-    while(true){
-      const {done,value}=await reader.read()
-      if(done) break 
-      const chunk=decoder.decode(value)
-      setMessage((prev) => {
-        const updated=[...prev]
-        updated[updated.length-1]={
-          ...updated[updated.length-1],
-          content:updated[updated.length-1].content+chunk,
-        }
-        return updated;
-    })
+    ]);
+    setQuery("");
+    setIsThinking(true);
+    try {
+      const chat = await fetch(`/api/chat?persona=${personaId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: prompt,
+        }),
+      });
+      const reader = chat.body?.getReader();
+      if (!reader) return;
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        if (!chunk) continue;
+        setIsThinking(false);
+        setMessage((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...updated[updated.length - 1],
+            content: updated[updated.length - 1].content + chunk,
+          };
+          return updated;
+        });
+      }
+    } finally {
+      setIsThinking(false);
     }
   }
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-outline-variant px-4 py-3 sm:px-6">
-        <div>
-          <p className="text-label-md capitalize text-on-surface">
-            {personaId?.toLowerCase()}
-          </p>
-          <p className="text-body-sm text-on-surface-variant">
-            AI mentor
-          </p>
+        <div className="flex gap-4 items-center">
+          {image && (
+            <div className="h-10 w-10 shrink-0 overflow-hidden ring-1 ring-outline-variant rounded-full">
+              <Image src={image} alt={personaId!} height={48} width={48} className="h-full w-full object-cover" />
+            </div>
+          )}
+          <div>
+            <p className="text-label-md capitalize text-on-surface">
+              {personaId?.toLowerCase()}
+            </p>
+            <p className="text-body-sm text-on-surface-variant">AI mentor</p>
+          </div>
         </div>
         {onChangeMentor && (
           <button
@@ -108,7 +130,18 @@ const Chat = ({
                       : "bg-surface-container text-on-surface"
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === "assistant" &&
+                  msg.content === "" &&
+                  isThinking &&
+                  idx === message.length - 1 ? (
+                    <span className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant" />
+                    </span>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </div>
             ))}
@@ -144,4 +177,4 @@ const Chat = ({
   );
 };
 
-export default Chat
+export default Chat;

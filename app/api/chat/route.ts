@@ -67,28 +67,7 @@ export async function POST(request: NextRequest) {
         throw new ModerationBlockedError("input", reason);
     }
     let fullAns=""
-    
-    const stream = await askGemini(validPersona, content);
-    const encoder = new TextEncoder();
-    const readable=new ReadableStream({
-      async start(controller){
 
-        for await(const chunk of stream){
-              const text = chunk.text ?? "";
-              fullAns+=text
-          controller.enqueue(
-            encoder.encode(chunk.text??"")
-          )
-        }
-        controller.close()
-      }
-    })
-//     return new Response(readable, {
-//   headers: {
-//     "Content-Type": "text/plain; charset=utf-8",
-//   },
-// });
-   
     await prisma.message.create({
       data: {
         persona: validPersona,
@@ -98,15 +77,37 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await prisma.message.create({
-      data: {
-        persona: validPersona,
-        content: fullAns,
-        role: "ASSISTANT",
-        userId: session.user.id,
+    const stream = await askGemini(validPersona, content);
+    const encoder = new TextEncoder();
+
+    const readable=new ReadableStream({
+      async start(controller){
+        try {
+          for await(const chunk of stream){
+            const text = chunk.text ?? "";
+            fullAns+=text
+            controller.enqueue(encoder.encode(text))
+          }
+        } finally {
+          controller.close()
+        }
+
+        await prisma.message.create({
+          data: {
+            persona: validPersona,
+            content: fullAns,
+            role: "ASSISTANT",
+            userId: session.user.id,
+          },
+        });
+      }
+    })
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
       },
     });
-    return NextResponse.json({ fullAns });
   } catch (error) {
     if (error instanceof ModerationBlockedError) {
       console.log("Moderation blocked", error.stage, error.reason);
