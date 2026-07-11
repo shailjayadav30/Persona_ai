@@ -66,7 +66,32 @@ export async function POST(request: NextRequest) {
     if(reason){
         throw new ModerationBlockedError("input", reason);
     }
-    let fullAns=""
+    const answer = await askGemini(validPersona, content);
+    const leakReason=345
+    if (!answer) {
+      return NextResponse.json(
+        { message: "Gemini did not return an empty  response" },
+        { status: 500 },
+      );
+    }
+    // await prisma.$transaction([
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content,
+    //       role: "USER",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content: answer,
+    //       role: "ASSISTANT",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    // ]);
 
     await prisma.message.create({
       data: {

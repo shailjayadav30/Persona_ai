@@ -1,51 +1,48 @@
 "use client";
+const URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-import PersonaCard from "./components/PersonaCard";
-import hitesh from "../public/hitesh.png";
-import piyush from "../public/piyush.png";
-import Chat from "./components/Chat";
-import { useState } from "react";
-export type PersonaId = "HITESH" | "PIYUSH";
+import axios from "axios";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+
 export default function Home() {
-  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(
-    null,
-  );
+  const [reply, setReply] = useState("");
+  const [ques, setQues] = useState("");
+  const router = useRouter();
+  function selectPersona(persona: "HITESH" | "PIYUSH") {
+    router.push(`/?persona=${persona}`);
+  }
+  // const searchParams = useSearchParams();
+  // const persona = searchParams.get("persona");
+  // console.log("Persona", persona);
+  // const sendMessage = async () => {
+  //   const response = await axios.post(`${URL}/api/chat?persona=${persona}`,{
+  //     content:ques
+  //   });
+  //   console.log("Response", response.data);
+
+  //   setReply(response.data.answer);
+  // };
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      {!selectedPersona ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4">
-          <div className="text-center">
-            <h1 className="text-headline-lg-mobile sm:text-headline-lg text-on-background">
-              Select your AI mentor
-            </h1>
-            <p className="mt-2 text-body-sm text-on-surface-variant">
-              Choose a persona tailored to your current task
-            </p>
-          </div>
+    <Suspense fallback={<div>Loading search...</div>}>
 
-          <div className="flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-            <PersonaCard
-              name="HITESH"
-              id="HITESH"
-              image={hitesh}
-              onClick={setSelectedPersona}
-              desc="Coding educator, YouTuber, builder"
-              selected={selectedPersona === "HITESH"}
-            />
-            <PersonaCard
-              name="PIYUSH"
-              id="PIYUSH"
-              image={piyush}
-              onClick={setSelectedPersona}
-              desc="Software Engineer, Content Creator, Educator"
-              selected={selectedPersona === "PIYUSH"}
-            />
-          </div>
-        </div>
-      ) : (
-        <Chat personaId={selectedPersona} onChangeMentor={() => setSelectedPersona(null)} />
-      )}
+    <div className="bg-green-600 p-10">
+      <div>{reply}</div>
+      <input
+        type="text"
+        name=""
+        id=""
+        value={ques}
+        onChange={(e) => setQues(e.target.value)}
+      />
+     <div className="gap-4">
+       <button onClick={() => selectPersona("HITESH")}>HITESH</button>
+      <button style={{backgroundColor:"red",padding:10}} onClick={() => selectPersona("PIYUSH")}>PIYUSH</button>
+      {/* <button onClick={() => sendMessage()}>Send</button> */}
+     </div>
     </div>
+    </Suspense>
+
   );
 }
