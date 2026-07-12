@@ -63,18 +63,18 @@ export async function POST(request: NextRequest) {
     const { content } = validatedBody.data;
     const validPersona = parsedPersona.data;
     const reason = detectPromptInjection(content);
-    if(reason){
-        throw new ModerationBlockedError("input", reason);
+    if (reason) {
+      throw new ModerationBlockedError("input", reason);
     }
-    const answer = await askGemini(validPersona, content);
-   
-    if (!answer) {
-      return NextResponse.json(
-        { message: "Gemini did not return an empty  response" },
-        { status: 500 },
-      );
-    }
+    let fullAns = "";
+    // const answer = await askGemini(validPersona, content);
 
+    // if (!answer) {
+    //   return NextResponse.json(
+    //     { message: "Gemini did not return an empty  response" },
+    //     { status: 500 },
+    //   );
+    // }
 
     await prisma.message.create({
       data: {
@@ -88,16 +88,16 @@ export async function POST(request: NextRequest) {
     const stream = await askGemini(validPersona, content);
     const encoder = new TextEncoder();
 
-    const readable=new ReadableStream({
-      async start(controller){
+    const readable = new ReadableStream({
+      async start(controller) {
         try {
-          for await(const chunk of stream){
+          for await (const chunk of stream) {
             const text = chunk.text ?? "";
-            fullAns+=text
-            controller.enqueue(encoder.encode(text))
+            fullAns += text;
+            controller.enqueue(encoder.encode(text));
           }
         } finally {
-          controller.close()
+          controller.close();
         }
 
         await prisma.message.create({
@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
             userId: session.user.id,
           },
         });
-      }
-    })
+      },
+    });
 
     return new Response(readable, {
       headers: {
