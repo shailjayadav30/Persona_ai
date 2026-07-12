@@ -66,15 +66,7 @@ export async function POST(request: NextRequest) {
     if(reason){
         throw new ModerationBlockedError("input", reason);
     }
-    const answer = await askGemini(validPersona, content);
-   
-    if (!answer) {
-      return NextResponse.json(
-        { message: "Gemini did not return an empty  response" },
-        { status: 500 },
-      );
-    }
-
+    let fullAns=""
 
     await prisma.message.create({
       data: {

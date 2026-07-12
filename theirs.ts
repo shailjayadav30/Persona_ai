@@ -67,14 +67,31 @@ export async function POST(request: NextRequest) {
         throw new ModerationBlockedError("input", reason);
     }
     const answer = await askGemini(validPersona, content);
-   
+    const leakReason=345
     if (!answer) {
       return NextResponse.json(
         { message: "Gemini did not return an empty  response" },
         { status: 500 },
       );
     }
-
+    // await prisma.$transaction([
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content,
+    //       role: "USER",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    //   prisma.message.create({
+    //     data: {
+    //       persona: validPersona,
+    //       content: answer,
+    //       role: "ASSISTANT",
+    //       userId: session.user.id,
+    //     },
+    //   }),
+    // ]);
 
     await prisma.message.create({
       data: {
@@ -85,37 +102,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const stream = await askGemini(validPersona, content);
-    const encoder = new TextEncoder();
-
-    const readable=new ReadableStream({
-      async start(controller){
-        try {
-          for await(const chunk of stream){
-            const text = chunk.text ?? "";
-            fullAns+=text
-            controller.enqueue(encoder.encode(text))
-          }
-        } finally {
-          controller.close()
-        }
-
-        await prisma.message.create({
-          data: {
-            persona: validPersona,
-            content: fullAns,
-            role: "ASSISTANT",
-            userId: session.user.id,
-          },
-        });
-      }
-    })
-
-    return new Response(readable, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+    await prisma.message.create({
+      data: {
+        persona: validPersona,
+        content: answer,
+        role: "ASSISTANT",
+        userId: session.user.id,
       },
     });
+    return NextResponse.json({ answer });
   } catch (error) {
     if (error instanceof ModerationBlockedError) {
       console.log("Moderation blocked", error.stage, error.reason);
