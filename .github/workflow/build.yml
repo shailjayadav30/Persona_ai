@@ -1,0 +1,27 @@
+name: Build on codePush
+
+on:
+  pull_request:
+    branch:
+      - main:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: action/checkout@v4
+
+      - name: Setup Node.js
+      - uses: action/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+      - run: npm install
+
+      - name: Generate prisma client
+        run: npx prisma generate
+
+      - name: Run Build
+        run: npm run build
