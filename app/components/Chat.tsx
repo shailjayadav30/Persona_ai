@@ -10,13 +10,17 @@ const image = {
 };
 
 const Chat = () => {
+  type Message = {
+    role: "user" | "assistant";
+    content: string;
+  };
+  type Persona = "HITESH" | "PIYUSH";
   const searchParams = useSearchParams();
-  const [message, setMessage] = useState<
-    {
-      role: "user" | "assistant";
-      content: string;
-    }[]
-  >([]);
+  const [chat, setChat] = useState<Record<Persona, Message[]>>({
+    HITESH: [],
+    PIYUSH: [],
+  });
+
   const [query, setQuery] = useState("");
   const [isThinking, setThinking] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
@@ -31,29 +35,33 @@ const Chat = () => {
   const selectedImage = currentpersona ? image[currentpersona] : null;
   useEffect(() => {
     messageRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message]);
+  }, [chat]);
   const handleSelectPersona = (value: "HITESH" | "PIYUSH") => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("persona", value);
     router.push(`${pathName}?${params.toString()}`);
     setIsOpen(false);
   };
+  const message = currentpersona ? chat[currentpersona] : [];
 
   async function chatWithPersona() {
     try {
       const prompt = query;
       if (!prompt.trim()) return;
-      setMessage((prev) => [
+      setChat((prev) => ({
         ...prev,
-        {
-          role: "user",
-          content: query,
-        },
-        {
-          role: "assistant",
-          content: "",
-        },
-      ]);
+        [currentpersona!]: [
+          ...prev[currentpersona!],
+          {
+            role: "user",
+            content: prompt,
+          },
+          {
+            role: "assistant",
+            content: "",
+          },
+        ],
+      }));
       setQuery("");
       setThinking(true);
       const chat = await fetch(`/api/chat?persona=${currentpersona}`, {
@@ -73,13 +81,17 @@ const Chat = () => {
         if (done) break;
         const textChunk = decoder.decode(value);
         if (!textChunk) continue;
-        setMessage((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            content: updated[updated.length - 1].content + textChunk,
+        setChat((prev) => {
+          const updatedMessage = [...prev[currentpersona!]];
+          updatedMessage[updatedMessage.length - 1] = {
+            ...updatedMessage[updatedMessage.length - 1],
+            content:
+              updatedMessage[updatedMessage.length - 1].content + textChunk,
           };
-          return updated;
+          return {
+            ...prev,
+            [currentpersona!]: updatedMessage,
+          };
         });
       }
     } finally {
@@ -89,7 +101,7 @@ const Chat = () => {
   return (
     <div className="flex flex-col  min-h-screen bg-[#191724]">
       {selectedImage ? (
-        <div className="mx-auto  flex w-full items-center justify-between  max-w-4xl   rounded-xl border border-[#403d52] bg-[#26233a] px-6 py-2 mt-6">
+        <div className="mx-auto  flex w-full items-center justify-between  max-w-4xl   rounded-xl border border-[#403d52] bg-[#26233a] px-6 py-2   mt-6">
           <div className="flex items-center gap-4">
             <Image
               src={selectedImage}
@@ -155,11 +167,12 @@ const Chat = () => {
                   <div ref={messageRef} />
                   {msg.role === "assistant" &&
                   isThinking &&
-                  idx === message.length - 1 ? (
+                  idx === message.length - 1 &&
+                  msg.content === "" ? (
                     <span className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#908caa] [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#908caa] [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#908caa]" />
                     </span>
                   ) : (
                     msg.content

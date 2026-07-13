@@ -1,12 +1,10 @@
 import { PersonaKey } from "@/app/generated/prisma/enums";
 import {
-  FinishReason,
   GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
 } from "@google/genai";
 import { personaPrompts } from "../personas";
-import { ModerationBlockedError } from "./moderation";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -33,19 +31,14 @@ const safetySettings = [
   },
 ];
 
-const BLOCKED_FINISH_REASONS: FinishReason[] = [
-  FinishReason.SAFETY,
-  FinishReason.PROHIBITED_CONTENT,
-  FinishReason.BLOCKLIST,
-  FinishReason.SPII,
-];
-
+// 
 export async function askGemini(persona: PersonaKey, prompt: string) {
   return ai.models.generateContentStream({
     model: "gemini-2.5-flash",
     config: {
       systemInstruction: personaPrompts[persona],
       safetySettings,
+      temperature:0.7
     },
     contents: prompt,
   });
