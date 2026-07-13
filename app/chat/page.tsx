@@ -1,9 +1,10 @@
 import Chat from "../components/Chat";
+import { Suspense } from "react";
 
 export default  function ChatPage(){
     return (
-        <div>
+        <Suspense >
             <Chat/>
-        </div>
+        </Suspense>
     )
 }
