@@ -52,7 +52,7 @@ export default function Signin() {
         value={input.password}
         onChange={onChangeInput}
       />
-      <button onClick={login}>LOGIN</button>
+      <button onClick={login}>LOGIN butt</button>
     </div>
   );
 }
