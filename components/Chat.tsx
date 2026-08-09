@@ -1,6 +1,6 @@
 "use client";
-import hitesh from "../../public/hitesh.png";
-import piyush from "../../public/piyush.png";
+import hitesh from "../public/hitesh.png";
+import piyush from "../public/piyush.png";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -99,10 +99,10 @@ const Chat = () => {
     }
   }
   return (
-    <div className="flex flex-col  min-h-screen bg-[#191724]">
+    <div className="flex flex-col  min-h-screen bg-[#191724] px-3 sm:px-6">
       {selectedImage ? (
-        <div className="mx-auto  flex w-full items-center justify-between  max-w-4xl   rounded-xl border border-[#403d52] bg-[#26233a] px-6 py-2   mt-6">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto  flex w-full flex-wrap items-center justify-between gap-2  max-w-4xl   rounded-xl border border-[#403d52] bg-[#26233a] px-4 sm:px-6 py-2   mt-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Image
               src={selectedImage}
               alt={`${currentpersona} profile`}
@@ -118,7 +118,7 @@ const Chat = () => {
           <div className="relative">
             <button
               onClick={() => setIsOpen((prev) => !prev)}
-              className=" rounded-xl border border-[#403d52] bg-[#393552] px-4 py-2 text-[#e0def4] transition-colors hover:border-[#9ccfd8] hover:bg-[#9ccfd8]/10 hover:text-[#9ccfd8]"
+              className=" rounded-xl border border-[#403d52] bg-[#393552] px-3 sm:px-4 py-2 text-sm sm:text-base text-[#e0def4] transition-colors hover:border-[#9ccfd8] hover:bg-[#9ccfd8]/10 hover:text-[#9ccfd8]"
             >
               Change Persona
             </button>
@@ -143,14 +143,14 @@ const Chat = () => {
 
       <div className="mx-auto  flex h-[70vh] w-full flex-col overflow-hidden max-w-4xl mt-6 rounded-2xl border border-[#403d52] bg-[#26233a] ">
         {message.length! === 0 ? (
-          <div className="text-xl text-[#9ccfd8] flex h-full items-center justify-center">
+          <div className="text-lg sm:text-xl text-[#9ccfd8] flex h-full items-center justify-center px-4 text-center">
             <h1 className="text-body-sm text-on-surface-variant">
               {" "}
               Ask something to start the conversation
             </h1>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* assistant message */}
             {message.map((msg, idx) => (
               <div
@@ -158,7 +158,7 @@ const Chat = () => {
                 className={` flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%]  rounded-xl   px-4 py-3 text-body-md whitespace-pre-wrap ${
+                  className={`max-w-[85%] sm:max-w-[80%]  rounded-xl   px-4 py-3 text-body-md whitespace-pre-wrap ${
                     msg.role === "user"
                       ? "bg-[#31748f] text-[#e0def4]"
                       : "bg-[#1f1d2e] text-[#e0def4]"
@@ -184,7 +184,7 @@ const Chat = () => {
         )}
       </div>
 
-      <div className="fixed bottom-7   left-1/2  w-full max-w-4xl -translate-x-1/2 ">
+      <div className="fixed bottom-4 sm:bottom-7 left-1/2 w-full max-w-4xl -translate-x-1/2 px-3 sm:px-6">
         <div className=" p-2 shadow-lg bg-[#26233a] flex rounded-2xl    border-[#403d52]     border items-center ">
           <input
             value={query}
@@ -194,11 +194,11 @@ const Chat = () => {
             }}
             type="text"
             placeholder="Type a message"
-            className=" flex-1 bg-transparent px-4 py-3 text-[#e0def4] placeholder:text-[#6e6a86] outline-none"
+            className=" flex-1 bg-transparent px-3 sm:px-4 py-3 text-[#e0def4] placeholder:text-[#6e6a86] outline-none min-w-0"
           />
           <button
             onClick={chatWithPersona}
-            className="rounded-xl bg-[#31748f] px-6 py-3 text-[#e0def4] hover:bg-[#3d86a7]   transition-colors duration-200 "
+            className="rounded-xl bg-[#31748f] px-4 sm:px-6 py-3 text-[#e0def4] hover:bg-[#3d86a7]   transition-colors duration-200 "
           >
             send
           </button>

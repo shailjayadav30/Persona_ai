@@ -23,7 +23,7 @@ export default function SelectPersona() {
 
 
       {!selectedPersona && (
-        <div className="flex gap-10 justify-center items-center top-30 relative">
+        <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 justify-center items-center top-30 relative px-4">
           <PersonaCard
             pName="HITESH"
             desc="Coding educator, YouTuber, builder"
