@@ -1,7 +1,10 @@
+    "use client";
+
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import PersonaCard from "./PersonaCard";
-import hitesh from "../../public/hitesh.png";
-import piyush from "../../public/piyush.png";
+import hitesh from "../public/hitesh.png";
+import piyush from "../public/piyush.png";
 import { useState } from "react";
 export default function SelectPersona() {
   const [selectedPersona, setSelectedPersona] = useState(false);
@@ -13,6 +16,12 @@ export default function SelectPersona() {
   }
   return (
     <div>
+
+    <button onClick={() => signOut({ callbackUrl: "/login" })}>
+      Sign Out
+    </button>
+
+
       {!selectedPersona && (
         <div className="flex gap-10 justify-center items-center top-30 relative">
           <PersonaCard
